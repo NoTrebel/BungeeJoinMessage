@@ -1,0 +1,17 @@
+## YAML configuration file for the SlHub plugin
+---
+    
+#whether to announce join/quite messages or not
+announcer:
+    announceJoin: true
+    announceQuit: true
+    announceFirstJoin: true
+
+#Messages {{PLAYER}} for playername. Use &-signs for colors, eg. &2
+messages:
+    joinMessage: "{{PLAYER}} has joined Minecraft"
+    quitMessage: "{{PLAYER}} has left Minecraft"
+    firstJoinMessage: "Welcome {{PLAYER}} to the server!"
+
+#logging
+log: true #true to enable console logging, false to disable console logging

@@ -1,8 +1,10 @@
 package nl.dgrf.bungeejoinmessage;
 
+
+import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.ProxyServer;
-import net.md_5.bungee.api.config.ServerInfo;
-import net.md_5.bungee.api.event.LoginEvent;
+import net.md_5.bungee.api.chat.BaseComponent;
+import net.md_5.bungee.api.chat.TextComponent;
 import net.md_5.bungee.api.event.PlayerDisconnectEvent;
 import net.md_5.bungee.api.event.PostLoginEvent;
 import net.md_5.bungee.api.event.ServerConnectedEvent;
@@ -12,82 +14,70 @@ import nl.dgrf.bungeejoinmessage.database.PlayerData;
 import nl.dgrf.bungeejoinmessage.util.Log;
 
 import java.util.*;
-import java.util.concurrent.TimeUnit;
 
 public class PlayerListener implements Listener {
-
     private Set<UUID> quitAnnc;
     private Set<UUID> joinAnnc;
+    private Set<UUID> firstJoinAnnc;
+    private BungeeJoinMessage main;
 
     private PlayerData pD;
+    private boolean announceJoin;
+    private boolean announceQuit;
+    private boolean announceFirstJoin;
 
-    PlayerListener() {
+    PlayerListener(BungeeJoinMessage main) {
+        this.main = main;
         quitAnnc = new HashSet<>();
         joinAnnc = new HashSet<>();
+        firstJoinAnnc = new HashSet<>();
 
-        pD = BungeeJoinMessage.getInstance().getPlayerData();
-    }
-
-    public void login(final LoginEvent event) {
-        if (BungeeEssentials.getInstance().contains("fastRelog")) {
-            if (connections.contains(event.getConnection().getAddress().getAddress())) {
-                event.setCancelled(true);
-                event.setCancelReason(Dictionary.format(Dictionary.FAST_RELOG_KICK).toLegacyText());
-                return;
-            }
-            connections.add(event.getConnection().getAddress().getAddress());
-            ProxyServer.getInstance().getScheduler().schedule(BungeeEssentials.getInstance(), () -> connections.remove(event.getConnection().getAddress().getAddress()), 5, TimeUnit.SECONDS);
-        }
-        if (BungeeEssentials.getInstance().contains("autoredirect")) {
-            String[] ip = event.getConnection().getVirtualHost().getHostName().split("\\.");
-            for (ServerInfo info : ProxyServer.getInstance().getServers().values()) {
-                if (info.getName().equalsIgnoreCase(ip[0])) {
-                    redirServer.put(event.getConnection().getAddress().getAddress(), info);
-                    break;
-                }
-            }
-        }
+        pD = main.getPlayerData();
     }
 
     /**
      * Event fired when a player completely logs in. A new PlayerData is created and
-     * saved, and the player is added to the playerlist and saved. Login is announced
-     * and logged.
+     * saved, and the player is added to the joinAnnounce list
      *
      * @param event The Post Login Event.
      */
     @EventHandler
     public void postLogin(PostLoginEvent event) {
+        String uuid = event.getPlayer().getUniqueId().toString();
+        if(this.announceJoin && pD.getData("uuid", uuid, "uuid") != null) {
+            joinAnnc.add(event.getPlayer().getUniqueId());
+        } else if(this.announceFirstJoin){
+            firstJoinAnnc.add(event.getPlayer().getUniqueId());
+        }
         pD.setName(event.getPlayer().getUniqueId().toString(), event.getPlayer().getName());
         pD.setIp(event.getPlayer().getUniqueId().toString(), event.getPlayer().getAddress().getAddress().getHostAddress());
-        //TODO: fix permissions
-        if (event.getPlayer().getServer() != null && event.getPlayer().hasPermission(Permissions.General.JOINANNC)) {
-            joinAnnc.add(event.getPlayer().getUniqueId());
-
-        }
-
     }
 
     /**
-     * Event fired when a player connects to a server. If player is set to be redirected,
-     * player is sent to that server and redirection is removed.
+     * Event fired when a player connects to a server.
      *
      * @param event The Server Connected Event.
      */
     @EventHandler(priority = Byte.MAX_VALUE)
     public void connect(ServerConnectedEvent event) {
-        if (redirServer.containsKey(event.getPlayer().getAddress().getAddress())) {
-            ServerInfo info = redirServer.get(event.getPlayer().getAddress().getAddress());
-            if (info.canAccess(event.getPlayer())) {
-                event.getPlayer().connect(info);
-            }
-            redirServer.remove(event.getPlayer().getAddress().getAddress());
+        if (main.getConfig().getBoolean("log")) {
+            Log.info("[CONNECT] " + event.getPlayer().getName() + "connected to " + event.getServer().getInfo().getName());
         }
-        if (BungeeEssentials.getInstance().contains("fulllog")) {
-            Log.info(Dictionary.format("[CONNECT] {{ PLAYER }} connected to {{ SERVER }}.", "PLAYER", event.getPlayer().getName(), "SERVER", event.getServer().getInfo().getName()).toLegacyText());
+        UUID uuid = event.getPlayer().getUniqueId();
+        if(joinAnnc.contains(uuid)){
+            joinAnnc.remove(uuid);
+            String message = main.getConfig().getString("messages.joinMessage").replace("{{PLAYER}}", event.getPlayer().getName());
+            BaseComponent[] text = TextComponent.fromLegacyText(ChatColor.translateAlternateColorCodes('&', message));
+            ProxyServer.getInstance().broadcast(text);
+        } else if(firstJoinAnnc.contains(uuid)){
+            firstJoinAnnc.remove(uuid);
+            String message = main.getConfig().getString("messages.firstJoinMessage").replace("{{PLAYER}}", event.getPlayer().getName());
+            BaseComponent[] text = TextComponent.fromLegacyText(ChatColor.translateAlternateColorCodes('&', message));
+            ProxyServer.getInstance().broadcast(text);
         }
+
     }
-}
+
 
     /**
      * Catches PlayerDisconnectEvent and stores whether the player has the quit
@@ -98,11 +88,15 @@ public class PlayerListener implements Listener {
      */
     @EventHandler(priority = Byte.MIN_VALUE)
     public void logoutPre(final PlayerDisconnectEvent event) {
-        if (event.getPlayer().getServer() != null && event.getPlayer().hasPermission(Permissions.General.QUITANNC)) {
-            quitAnnc.add(event.getPlayer().getUniqueId());
+        joinAnnc.remove(event.getPlayer().getUniqueId());
+        UUID uuid = event.getPlayer().getUniqueId();
+        if (this.announceQuit && event.getPlayer().getServer() != null) {
+            quitAnnc.add(uuid);
         } else {
-            quitAnnc.remove(event.getPlayer().getUniqueId());
+            quitAnnc.remove(uuid);
         }
+        joinAnnc.remove(uuid);
+        firstJoinAnnc.remove(uuid);
     }
 
     /**
@@ -114,17 +108,23 @@ public class PlayerListener implements Listener {
      */
     @EventHandler(priority = Byte.MAX_VALUE)
     public void logout(final PlayerDisconnectEvent event) {
-        BungeeEssentials.getInstance().getPlayerData().setLastSeen(event.getPlayer().getUniqueId().toString(), System.currentTimeMillis());
-        if (BungeeEssentials.getInstance().contains("fastRelog")) {
-            if (!connections.contains(event.getPlayer().getAddress().getAddress())) {
-                connections.add(event.getPlayer().getAddress().getAddress());
-                ProxyServer.getInstance().getScheduler().schedule(BungeeJoinMessage.getInstance(), () -> connections.remove(event.getPlayer().getAddress().getAddress()), 3, TimeUnit.SECONDS);
-            }
+        main.getPlayerData().setLastSeen(event.getPlayer().getUniqueId().toString(), System.currentTimeMillis());
+
+        if (announceQuit && quitAnnc.contains(event.getPlayer().getUniqueId())) {
+            quitAnnc.remove(event.getPlayer().getUniqueId());
+
+            String message = main.getConfig().getString("messages.quitMessage").replace("{{PLAYER}}", event.getPlayer().getName());
+            BaseComponent[] text = TextComponent.fromLegacyText(ChatColor.translateAlternateColorCodes('&', message));
+            ProxyServer.getInstance().broadcast(text);
         }
-        if (BungeeEssentials.getInstance().contains("joinAnnounce") && !(Dictionary.FORMAT_QUIT.equals("")) && quitAnnc.contains(event.getPlayer().getUniqueId()) && !pD.isHidden(event.getPlayer().getUniqueId().toString())) {
-            ProxyServer.getInstance().broadcast(Dictionary.format(Dictionary.FORMAT_QUIT, "PLAYER", event.getPlayer().getName()));
-        }
-        if (BungeeEssentials.getInstance().contains("fulllog")) {
-            Log.log(Dictionary.format("[QUIT] " + Dictionary.FORMAT_QUIT, "PLAYER", event.getPlayer().getName()).toLegacyText());
+        if (main.getConfig().getBoolean("log")) {
+            Log.info("[QUIT] " + event.getPlayer().getName() + "disconnected from the server");
         }
     }
+
+    void updateEnabled() {
+        this.announceJoin = main.getConfig().getBoolean("announcer.announceJoin");
+        this.announceQuit = main.getConfig().getBoolean("announcer.announceQuit");
+        this.announceFirstJoin = main.getConfig().getBoolean("announcer.announceFirstJoin");
+    }
+}

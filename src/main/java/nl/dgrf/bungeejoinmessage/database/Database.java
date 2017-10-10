@@ -20,23 +20,13 @@ public abstract class Database {
 
     private Connection connection;
     private String primary;
-    private String url;
-    private String username;
-    private String password;
     private int uses = 0;
-
 
     public Database(String tableName, String setupSql, String primary) {
         this.tableName = tableName;
         this.primary = primary;
         load(setupSql, primary);
     }
-
-     public String getTableName() {
-        return tableName;
-    }
-
-
 
     public Object getData(String key, String keyVal, String label) {
         List<Object> datas = getDataMultiple(key, keyVal, label);
@@ -72,6 +62,8 @@ public abstract class Database {
         }
         return null;
     }
+
+    public abstract boolean createDataNotExist(String keyVal);
 
     public void setData(String key, String keyVal, String label, Object labelVal) {
         if (key.equals(primary) && !createDataNotExist(keyVal)) {
@@ -169,7 +161,8 @@ public abstract class Database {
 
     private void load(String setupSql, String primary) {
         connection = getSQLConnection();
-
+        BungeeJoinMessage.getInstance().getLogger().log(Level.INFO, "creating table with name: " + tableName);
+        BungeeJoinMessage.getInstance().getLogger().log(Level.INFO, "creating table with columns: " + setupSql);
         try (Statement s = connection.createStatement()) {
             s.executeUpdate("CREATE TABLE IF NOT EXISTS " + tableName + " " + setupSql + ",PRIMARY KEY (`" + primary + "`));");
         } catch (SQLException e) {

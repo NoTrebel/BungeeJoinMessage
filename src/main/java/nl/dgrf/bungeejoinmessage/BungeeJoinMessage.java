@@ -5,6 +5,7 @@ import net.md_5.bungee.api.plugin.Plugin;
 import net.md_5.bungee.config.Configuration;
 import net.md_5.bungee.config.ConfigurationProvider;
 import net.md_5.bungee.config.YamlConfiguration;
+import nl.dgrf.bungeejoinmessage.Commands.BungeeJoin;
 import nl.dgrf.bungeejoinmessage.database.PlayerData;
 
 import java.io.File;
@@ -21,19 +22,13 @@ public class BungeeJoinMessage extends Plugin {
     private File configFile;
     private PlayerData playerData;
     private Configuration config;
+    private PlayerListener listen;
 
     /**
      * @return The BungeeEssentials instance.
      */
     public static BungeeJoinMessage getInstance() {
         return instance;
-    }
-
-    /**
-     * @return The lib directory.
-     */
-    public File getLibDir() {
-        return this.libDir;
     }
 
     /**
@@ -67,11 +62,12 @@ public class BungeeJoinMessage extends Plugin {
         ProxyServer.getInstance().getPluginManager().unregisterListeners(this);
 
         playerData = new PlayerData();
+        playerData.createDataNotExist("CONSOLE");
 
-        ProxyServer.getInstance().getPluginManager().registerListener(this, new PlayerListener());
+        listen = new PlayerListener((this));
+        ProxyServer.getInstance().getPluginManager().registerListener(this, listen);
 
-        //TODO: Register commands
-
+        getProxy().getPluginManager().registerCommand(this, new BungeeJoin(this));
         return true;
     }
 
@@ -88,8 +84,7 @@ public class BungeeJoinMessage extends Plugin {
         reload();
     }
 
-
-    private void saveConfig() throws IOException {
+    private void makeConfig() throws IOException {
         if (!getDataFolder().exists()) {
             if (!getDataFolder().mkdir()) {
                 getLogger().log(Level.WARNING, "Unable to create config folder!");
@@ -101,16 +96,36 @@ public class BungeeJoinMessage extends Plugin {
         }
     }
 
+    // TODO Save config option
+    public void saveConfig() {
+    }
+
+    /**
+     * @return The lib directory.
+     */
+    public File getLibDir() {
+        return this.libDir;
+    }
+
+    public void updateEnabled() {
+        listen.updateEnabled();
+    }
+
+    /**
+     * Tries to load all the config files.
+     *
+     * @throws IOException The IOException thrown if the files could not be created
+     */
+    @SuppressWarnings("ResultOfMethodCallIgnored")
     private void loadConfig() throws IOException {
         if (!libDir.exists()) {
             libDir.mkdir();
         }
         if (!configFile.exists()) {
-            saveConfig();
+            makeConfig();
         }
         config = ConfigurationProvider.getProvider(YamlConfiguration.class).load(configFile);
     }
-
 
 }
 
