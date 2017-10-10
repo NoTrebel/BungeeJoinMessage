@@ -161,12 +161,10 @@ public abstract class Database {
 
     private void load(String setupSql, String primary) {
         connection = getSQLConnection();
-        BungeeJoinMessage.getInstance().getLogger().log(Level.INFO, "creating table with name: " + tableName);
-        BungeeJoinMessage.getInstance().getLogger().log(Level.INFO, "creating table with columns: " + setupSql);
         try (Statement s = connection.createStatement()) {
             s.executeUpdate("CREATE TABLE IF NOT EXISTS " + tableName + " " + setupSql + ",PRIMARY KEY (`" + primary + "`));");
         } catch (SQLException e) {
-            e.printStackTrace();
+            BungeeJoinMessage.getInstance().getLogger().log(Level.SEVERE, "Exception when creating the table",e);
         }
     }
 }

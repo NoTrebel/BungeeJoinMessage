@@ -19,7 +19,7 @@ public class PlayerData extends Database {
             "`uuid` VARCHAR(36) NOT NULL," +
             "`lastname` VARCHAR(32) NOT NULL," +
             "`ip` VARCHAR(32) NOT NULL," +
-            "`lastseen` BIGINT(32) NOT NULL,";
+            "`lastseen` BIGINT(32) NOT NULL";
 
     private Map<String, String> lastname = new HashMap<>();
     private Map<String, String> ip = new HashMap<>();
@@ -44,7 +44,7 @@ public class PlayerData extends Database {
         try (
                 PreparedStatement ps = conn.prepareStatement("INSERT INTO " + tableName +
                         " (uuid, lastname, ip, lastseen) " +
-                        "VALUES (?,?,?);")
+                        "VALUES (?,?,?,?);")
         ) {
             if (uuid.equals("CONSOLE")) {
                 setValues(ps, uuid, "Console", "127.0.0.1");
@@ -63,7 +63,7 @@ public class PlayerData extends Database {
     }
 
     private void insertDefaults(PreparedStatement ps) throws SQLException {
-        setValues(4, ps, System.currentTimeMillis() / 1000, "");
+        setValues(3, ps, System.currentTimeMillis() / 1000, "");
     }
 
     private Map<String, Map> getData() {

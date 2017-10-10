@@ -68,6 +68,7 @@ public class BungeeJoinMessage extends Plugin {
         ProxyServer.getInstance().getPluginManager().registerListener(this, listen);
 
         getProxy().getPluginManager().registerCommand(this, new BungeeJoin(this));
+        this.updateEnabled();
         return true;
     }
 
