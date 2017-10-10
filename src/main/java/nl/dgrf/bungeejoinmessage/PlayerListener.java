@@ -14,6 +14,7 @@ import nl.dgrf.bungeejoinmessage.database.PlayerData;
 import nl.dgrf.bungeejoinmessage.util.Log;
 
 import java.util.*;
+import java.util.logging.Level;
 
 public class PlayerListener implements Listener {
     private Set<UUID> quitAnnc;
@@ -46,7 +47,7 @@ public class PlayerListener implements Listener {
         String uuid = event.getPlayer().getUniqueId().toString();
         if(this.announceJoin && pD.getData("uuid", uuid, "uuid") != null) {
             joinAnnc.add(event.getPlayer().getUniqueId());
-        } else if(this.announceFirstJoin){
+        } else if(this.announceFirstJoin && pD.getData("uuid", uuid, "uuid") == null){
             firstJoinAnnc.add(event.getPlayer().getUniqueId());
         }
         pD.setName(event.getPlayer().getUniqueId().toString(), event.getPlayer().getName());

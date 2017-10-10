@@ -35,28 +35,39 @@ public class BungeeJoin extends Command {
         //only allow execution of the command if the executor is a player
         if (sender instanceof ProxiedPlayer) {
             ProxiedPlayer player = (ProxiedPlayer) sender;
-            switch (args[0]) {
-                case "status":
-                    sender.sendMessage(TextComponent.fromLegacyText(ChatColor.translateAlternateColorCodes('&', "&4Current status:")));
-                    sender.sendMessage(TextComponent.fromLegacyText(ChatColor.translateAlternateColorCodes('§', "§2Join messages enabled: §f" + config.getBoolean("announcer.announceJoin"))));
-                    sender.sendMessage(TextComponent.fromLegacyText(ChatColor.translateAlternateColorCodes('§', " §2Quit messages enabled: §f" + config.getBoolean("announcer.announceQuit"))));
-                    sender.sendMessage(TextComponent.fromLegacyText(ChatColor.translateAlternateColorCodes('§', " §First time join messages enabled: §f" + config.getBoolean("announcer.announceFirstJoin"))));
-                    break;
-                case "enable":
-                case "disable":
-                    sender.sendMessage(TextComponent.fromLegacyText(ChatColor.translateAlternateColorCodes('&', "&CNOT IMPLEMENTED YET! MODIFY THE CONFIG FILE AND RELOAD IT")));
-                case "reload":
-                    main.updateEnabled();
-                    break;
-                default:
-                    sender.sendMessage(TextComponent.fromLegacyText(ChatColor.translateAlternateColorCodes('§', "§4/bungeejoin §fhelp - §2Show this help.")));
-                    sender.sendMessage(TextComponent.fromLegacyText(ChatColor.translateAlternateColorCodes('§', "§4/bungeejoin §fenable <§1arg§f> - §2enable a function")));
-                    sender.sendMessage(TextComponent.fromLegacyText(ChatColor.translateAlternateColorCodes('§', "§4/bungeejoin §fdisable <§1arg§f> - §2disable a function")));
-                    sender.sendMessage(TextComponent.fromLegacyText(ChatColor.translateAlternateColorCodes('§', "§4/bungeejoin §fstatus - §2 shows status")));
-                    sender.sendMessage(TextComponent.fromLegacyText(ChatColor.translateAlternateColorCodes('§', "§4/bungeejoin §reload - §2 reload config file")));
+            if (args.length > 0) {
+                switch (args[0]) {
+                    case "status":
+                        sender.sendMessage(TextComponent.fromLegacyText(ChatColor.translateAlternateColorCodes('&', "&4Current status:")));
+                        sender.sendMessage(TextComponent.fromLegacyText(ChatColor.translateAlternateColorCodes('§', "§2Join messages enabled: §f" + config.getBoolean("announcer.announceJoin"))));
+                        sender.sendMessage(TextComponent.fromLegacyText(ChatColor.translateAlternateColorCodes('§', " §2Quit messages enabled: §f" + config.getBoolean("announcer.announceQuit"))));
+                        sender.sendMessage(TextComponent.fromLegacyText(ChatColor.translateAlternateColorCodes('§', " §2First time join messages enabled: §f" + config.getBoolean("announcer.announceFirstJoin"))));
+                        break;
+                    case "enable":
+                    case "disable":
+                        sender.sendMessage(TextComponent.fromLegacyText(ChatColor.translateAlternateColorCodes('&', "&CNOT IMPLEMENTED YET! MODIFY THE CONFIG FILE AND RELOAD IT")));
+                    case "reload":
+                        main.reload();
+                        break;
+                    case "find":
+                        break;
+                    default:
+                        sender.sendMessage(TextComponent.fromLegacyText(ChatColor.translateAlternateColorCodes('§', "§4/bungeejoin §fhelp - §2Show this help.")));
+                        sender.sendMessage(TextComponent.fromLegacyText(ChatColor.translateAlternateColorCodes('§', "§4/bungeejoin §fenable <§1arg§f> - §2enable a function")));
+                        sender.sendMessage(TextComponent.fromLegacyText(ChatColor.translateAlternateColorCodes('§', "§4/bungeejoin §fdisable <§1arg§f> - §2disable a function")));
+                        sender.sendMessage(TextComponent.fromLegacyText(ChatColor.translateAlternateColorCodes('§', "§4/bungeejoin §fstatus - §2 shows status")));
+                        sender.sendMessage(TextComponent.fromLegacyText(ChatColor.translateAlternateColorCodes('§', "§4/bungeejoin §reload - §2 reload config file")));
+                }
+            } else {
+                sender.sendMessage(TextComponent.fromLegacyText(ChatColor.translateAlternateColorCodes('§', "§4/bungeejoin §fhelp - §2Show this help.")));
+                sender.sendMessage(TextComponent.fromLegacyText(ChatColor.translateAlternateColorCodes('§', "§4/bungeejoin §fenable <§1arg§f> - §2enable a function")));
+                sender.sendMessage(TextComponent.fromLegacyText(ChatColor.translateAlternateColorCodes('§', "§4/bungeejoin §fdisable <§1arg§f> - §2disable a function")));
+                sender.sendMessage(TextComponent.fromLegacyText(ChatColor.translateAlternateColorCodes('§', "§4/bungeejoin §fstatus - §2 shows status")));
+                sender.sendMessage(TextComponent.fromLegacyText(ChatColor.translateAlternateColorCodes('§', "§4/bungeejoin §reload - §2 reload config file")));
             }
         } else {
             Log.warning("This command can only be executed as a player");
+
         }
     }
 }
