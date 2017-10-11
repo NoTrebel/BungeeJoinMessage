@@ -25,7 +25,7 @@ public class BungeeJoinMessage extends Plugin {
     private PlayerListener listen;
 
     /**
-     * @return The BungeeEssentials instance.
+     * @return The BungeeJoinMessage instance.
      */
     public static BungeeJoinMessage getInstance() {
         return instance;
