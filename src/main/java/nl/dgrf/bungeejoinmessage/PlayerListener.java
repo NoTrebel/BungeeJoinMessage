@@ -62,7 +62,7 @@ public class PlayerListener implements Listener {
     @EventHandler(priority = Byte.MAX_VALUE)
     public void connect(ServerConnectedEvent event) {
         if (main.getConfig().getBoolean("log")) {
-            Log.info("[CONNECT] " + event.getPlayer().getName() + "connected to " + event.getServer().getInfo().getName());
+            Log.info("[CONNECT] " + event.getPlayer().getName() + " connected to " + event.getServer().getInfo().getName());
         }
         UUID uuid = event.getPlayer().getUniqueId();
         if(joinAnnc.contains(uuid)){
@@ -119,7 +119,7 @@ public class PlayerListener implements Listener {
             ProxyServer.getInstance().broadcast(text);
         }
         if (main.getConfig().getBoolean("log")) {
-            Log.info("[QUIT] " + event.getPlayer().getName() + "disconnected from the server");
+            Log.info("[QUIT] " + event.getPlayer().getName() + " disconnected from the server");
         }
     }
 
